@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -11,10 +11,10 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async create(username: string, password: string): Promise<User> {
+  async create(email: string, password: string): Promise<User> {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = this.usersRepository.create({
-      username,
+      email,
       password: hashedPassword,
     });
     return this.usersRepository.save(user);
@@ -24,25 +24,32 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
-  async findOne(id: number): Promise<User | undefined> {
+  async findOne(id: number): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id } });
-    return user ?? undefined; // convierte null a undefined
+    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+    return user;
   }
 
-  async update(id: number, username: string, password: string): Promise<User> {
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { email } });
+  }
+
+  async update(id: number, email: string, password?: string): Promise<User> {
     const user = await this.findOne(id);
-    if (!user) throw new Error('User not found');
-    user.username = username;
-    user.password = await bcrypt.hash(password, 10);
+    user.email = email;
+    if (password) {
+      user.password = await bcrypt.hash(password, 10);
+    }
     return this.usersRepository.save(user);
   }
 
   async remove(id: number): Promise<void> {
-    await this.usersRepository.delete(id);
+    const user = await this.findOne(id);
+    await this.usersRepository.remove(user);
   }
 
-  async findByUsername(username: string): Promise<User | undefined> {
-    const user = await this.usersRepository.findOne({ where: { username } });
+  async findByUsername(email: string): Promise<User | undefined> {
+    const user = await this.usersRepository.findOne({ where: { email } });
     return user ?? undefined;
   }
 }

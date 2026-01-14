@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
@@ -7,8 +16,21 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  async create(@Body() createUserDto: { email: string; password: string }) {
-    return this.usersService.create(createUserDto.email, createUserDto.password);
+  async create(
+    @Body()
+    createUserDto: {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+    },
+  ) {
+    return this.usersService.create(
+      createUserDto.email,
+      createUserDto.password,
+      createUserDto.firstName,
+      createUserDto.lastName,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -20,7 +42,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+    return this.usersService.findOne(id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -29,6 +51,10 @@ export class UsersController {
     @Param('id') id: string,
     @Body() updateUserDto: { email: string; password?: string },
   ) {
-    return this.usersService.update(+id, updateUserDto.email, updateUserDto.password);
+    return this.usersService.update(
+      id,
+      updateUserDto.email,
+      updateUserDto.password,
+    );
   }
 }

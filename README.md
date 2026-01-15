@@ -1,3 +1,36 @@
+Aquí tienes el **README.md** actualizado y organizado, incluyendo la sección de **Documentación con Swagger** para que cualquier desarrollador pueda probar los endpoints fácilmente.
+
+```markdown
+# ⚙️ Debt Management System - Backend API (NestJS)
+
+Este es el servidor API robusto encargado de la lógica de negocio, persistencia de datos y generación de estadísticas para el sistema de gestión de deudas.
+
+---
+
+## 📋 Tabla de Contenidos
+
+- [🎯 Descripción General](#-descripción-general)
+- [🏗️ Estructura del Proyecto](#%EF%B8%8F-estructura-del-proyecto)
+- [📦 Infraestructura (Docker)](#-infraestructura-docker)
+- [🚀 Inicio Rápido](#-inicio-rápido)
+- [📖 Documentación de la API (Swagger)](#-documentación-de-la-api-swagger)
+- [🌍 Variables de Entorno](#-variables-de-entorno)
+- [🧪 Endpoints Principales](#-endpoints-principales)
+- [🎨 Tecnologías Usadas](#-tecnologías-usadas)
+
+---
+
+## 🎯 Descripción General
+
+El backend gestiona el ciclo de vida de las deudas, incluyendo:
+- 🔐 Autenticación y Autorización basada en **JWT**.
+- 📊 Dashboard de estadísticas con cálculos agregados (Total, Pagado, Pendiente).
+- 🧾 Gestión de deudas (CRUD) con filtros avanzados y paginación.
+- 💸 Lógica para marcar deudas como pagadas vinculando al usuario responsable.
+- 🚀 Caché con **Redis** para optimizar el rendimiento.
+- 📝 Documentación interactiva con **Swagger**.
+
+---
 
 ## 📦 Infraestructura (Docker)
 
@@ -22,7 +55,8 @@ docker-compose up -d
 
 ```bash
 # 1. Clonar e instalar
-git clone https://github.com/CarlosAndresOrtega/debt-core.git
+git clone [https://github.com/CarlosAndresOrtega/debt-core.git](https://github.com/CarlosAndresOrtega/debt-core.git)
+cd debt-core
 npm install
 
 # 2. Configurar Base de Datos (Docker)
@@ -37,9 +71,24 @@ La API estará disponible en: `http://localhost:3000/api`
 
 ---
 
+## 📖 Documentación de la API (Swagger)
+
+El proyecto tiene implementado **Swagger**, lo que permite visualizar y probar todos los endpoints desde una interfaz web interactiva.
+
+Una vez que la aplicación esté corriendo, puedes acceder a la documentación en:
+👉 **[http://localhost:3000/api/docs](https://www.google.com/search?q=http://localhost:3000/api/docs)** (o la ruta configurada en tu `main.ts`).
+
+En esta interfaz podrás:
+
+* Ver los esquemas de datos (DTOs).
+* Probar el Login y Registro.
+* Ejecutar peticiones autenticadas usando el botón `Authorize` con el token JWT.
+
+---
+
 ## 🌍 Variables de Entorno
 
-Crea un archivo `.env` basado en los valores del `docker-compose.yml`:
+Crea un archivo `.env` en la raíz basado en los valores del `docker-compose.yml`:
 
 ```env
 PORT=3000
@@ -81,6 +130,7 @@ JWT_SECRET=tu_clave_secreta
 | Tecnología | Descripción |
 | --- | --- |
 | **NestJS** | Framework de backend eficiente y escalable. |
+| **Swagger** | Documentación interactiva de la API. |
 | **TypeORM** | ORM para interactuar con PostgreSQL. |
 | **PostgreSQL** | Motor de base de datos relacional. |
 | **Redis** | Gestión de caché de alto rendimiento. |
@@ -96,15 +146,5 @@ npm run build       # Compilar para producción
 docker-compose down # Apagar base de datos y caché
 
 ```
-
----
-
-<div align="center">
-<i>Desarrollado para la gestión financiera eficiente</i>
-</div>
-
-```
-
-**¿Te gustaría que te ayude a generar también un archivo `.env.example` para que el equipo sepa qué variables configurar?**
 
 ```

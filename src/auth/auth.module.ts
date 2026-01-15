@@ -11,7 +11,7 @@ import { JwtStrategy } from './jwt.strategy';
     UsersModule,
     PassportModule,
     JwtModule.register({
-      secret: 'supersecret123', // ⚠️ Usa env variable en prod
+      secret: 'supersecret123',
       signOptions: { expiresIn: '1h' },
     }),
   ],

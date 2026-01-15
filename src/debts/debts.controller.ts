@@ -10,25 +10,32 @@ import {
   Request,
   UseInterceptors,
   Query,
+  Inject,
+  Res,
 } from '@nestjs/common';
 import { DebtsService } from './debts.service';
 import { CreateDebtDto } from './dto/create-debt.dto';
 import { UpdateDebtDto } from './dto/update-debt.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { CacheInterceptor } from '@nestjs/cache-manager';
+import { CacheInterceptor, CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @ApiTags('debts')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@UseInterceptors(CacheInterceptor)
 @Controller('debts')
 export class DebtsController {
-  constructor(private readonly debtsService: DebtsService) {}
+  constructor(
+    private readonly debtsService: DebtsService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   @Post()
-  create(@Body() createDebtDto: CreateDebtDto, @Request() req) {
-    return this.debtsService.create(createDebtDto, req.user.id);
+  async create(@Body() createDebtDto: any) {
+    const result = await this.debtsService.create(createDebtDto);
+    await this.cacheManager.del('/debts');
+    return result;
   }
 
   @Get()
@@ -38,27 +45,48 @@ export class DebtsController {
     @Query() filters: any,
   ) {
     const { page: p, size: s, ...queryFilters } = filters;
-
     return this.debtsService.findAll(+page, +size, queryFilters);
   }
 
   @Get('stats')
+  @UseInterceptors(CacheInterceptor)
   getStats() {
     return this.debtsService.getStats();
   }
 
-  @Patch(':id/pay')
-  markAsPaid(@Param('id') id: string, @Request() req) {
-    return this.debtsService.markAsPaid(id, req.user.sub); // req.user.sub es el ID del usuario logueado
+  @Get(':id')
+  @UseInterceptors(CacheInterceptor)
+  findOne(@Param('id') id: string) {
+    return this.debtsService.findOne(id);
   }
 
-  @Get('export/json')
-  async exportJson() {
-    const result = await this.debtsService.findAll(1, 10000);
-    return {
-      reportDate: new Date().toISOString(),
-      totalRecords: result.pagination.totalItems,
-      data: result.items,
-    };
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() updateDebtDto: any) {
+    const result = await this.debtsService.update(id, updateDebtDto);
+    await this.cacheManager.del('/debts');
+    return result;
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    const result = await this.debtsService.remove(id);
+    await this.cacheManager.del('/debts');
+    return result;
+  }
+
+  @Patch(':id/pay')
+  async markAsPaid(@Param('id') id: string, @Body('userId') userId: string) {
+    const result = await this.debtsService.markAsPaid(id, userId);
+    await this.cacheManager.del('/debts');
+    return result;
+  }
+
+  @Get('export/csv')
+  async exportCsv(@Query() filters: any, @Res() res) {
+    const csvData = await this.debtsService.exportToCsv(filters);
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=deudas.csv');
+    return res.send(csvData);
   }
 }

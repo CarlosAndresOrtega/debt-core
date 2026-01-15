@@ -24,10 +24,6 @@ export class DebtsService {
       user: { userId: userId },
     });
     const saved = (await this.debtRepository.save(newDebt)) as Debt | Debt[];
-    console.log(
-      'Registro 24 creado con ID:',
-      Array.isArray(saved) ? (saved[0] as Debt)?.id : (saved as Debt).id,
-    ); 
     return saved;
   }
 
@@ -66,13 +62,12 @@ export class DebtsService {
     if (filters?.dateFrom && filters?.dateTo) {
       const start = new Date(filters.dateFrom);
       start.setUTCHours(0, 0, 0, 0);
-    
+
       const end = new Date(filters.dateTo);
       end.setUTCHours(23, 59, 59, 999);
-    
+
       where.createdAt = Between(start, end);
     }
-
 
     const [items, totalItems] = await this.debtRepository.findAndCount({
       where,
@@ -86,7 +81,7 @@ export class DebtsService {
     return {
       items,
       pagination: {
-        totalItems, 
+        totalItems,
         pageSize: Number(size),
         currentPage: Number(page),
         totalPages: Math.ceil(totalItems / Number(size)),
@@ -132,39 +127,48 @@ export class DebtsService {
 
     return await this.debtRepository.save(debt);
   }
-  async getStats() {
-    const stats = await this.debtRepository
+  async calculateStats() {
+    const pending = await this.debtRepository
       .createQueryBuilder('debt')
-      .select(
-        'SUM(CASE WHEN debt.isPaid = false THEN CAST(debt.amount AS DECIMAL) ELSE 0 END)',
-        'pendingBalance',
-      )
-      .addSelect(
-        'SUM(CASE WHEN debt.isPaid = true THEN CAST(debt.amount AS DECIMAL) ELSE 0 END)',
-        'totalPaid',
-      )
+      .select('SUM(debt.amount)', 'sum')
+      .where('debt.isPaid = :isPaid', { isPaid: false })
+      .getRawOne();
+
+    const paid = await this.debtRepository
+      .createQueryBuilder('debt')
+      .select('SUM(debt.amount)', 'sum')
+      .where('debt.isPaid = :isPaid', { isPaid: true })
       .getRawOne();
 
     return {
-      pendingBalance: parseFloat(stats.pendingBalance || 0),
-      totalPaid: parseFloat(stats.totalPaid || 0),
+      pendingBalance: parseFloat(pending.sum) || 0,
+      totalPaid: parseFloat(paid.sum) || 0,
     };
   }
 
   async exportToCsv(filters: any): Promise<string> {
     const { items } = await this.findAll(1, 10000, filters);
 
-    const headers = ['Descripción', 'Monto', 'Estado', 'Usuario', 'Pagado Por', 'Fecha Registro'];
-    
-    const rows = items.map(debt => [
-        `"${debt.description}"`,
-        debt.amount,
-        debt.isPaid ? 'Pagada' : 'Pendiente',
-        `"${debt.user?.firstName} ${debt.user?.lastName}"`,
-        debt.paidByUser ? `"${debt.paidByUser?.firstName} ${debt.paidByUser?.lastName}"` : 'N/A',
-        new Date(debt.createdAt).toISOString()
+    const headers = [
+      'Descripción',
+      'Monto',
+      'Estado',
+      'Usuario',
+      'Pagado Por',
+      'Fecha Registro',
+    ];
+
+    const rows = items.map((debt) => [
+      `"${debt.description}"`,
+      debt.amount,
+      debt.isPaid ? 'Pagada' : 'Pendiente',
+      `"${debt.user?.firstName} ${debt.user?.lastName}"`,
+      debt.paidByUser
+        ? `"${debt.paidByUser?.firstName} ${debt.paidByUser?.lastName}"`
+        : 'N/A',
+      new Date(debt.createdAt).toISOString(),
     ]);
 
-    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-}
+    return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+  }
 }

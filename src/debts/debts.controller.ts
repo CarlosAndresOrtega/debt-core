@@ -26,11 +26,6 @@ import { CacheInterceptor } from '@nestjs/cache-manager';
 export class DebtsController {
   constructor(private readonly debtsService: DebtsService) {}
 
-  @Get('filters')
-  getFilters() {
-    return this.debtsService.getFilters();
-  }
-
   @Post()
   create(@Body() createDebtDto: CreateDebtDto, @Request() req) {
     return this.debtsService.create(createDebtDto, req.user.id);
@@ -42,7 +37,7 @@ export class DebtsController {
     @Query('size') size: number = 10,
     @Query() filters: any,
   ) {
-    const { page: _, size: __, ...queryFilters } = filters;
+    const { page: p, size: s, ...queryFilters } = filters;
 
     return this.debtsService.findAll(+page, +size, queryFilters);
   }
@@ -53,8 +48,8 @@ export class DebtsController {
   }
 
   @Patch(':id/pay')
-  markAsPaid(@Param('id') id: string) {
-    return this.debtsService.markAsPaid(id);
+  markAsPaid(@Param('id') id: string, @Request() req) {
+    return this.debtsService.markAsPaid(id, req.user.sub); // req.user.sub es el ID del usuario logueado
   }
 
   @Get('export/json')

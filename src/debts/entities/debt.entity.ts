@@ -25,5 +25,11 @@ export class Debt {
   createdAt: Date;
 
   @ManyToOne(() => User, (user) => user.debts)
-  user: User;
+  user: User; 
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  paidByUser: User; 
+
+  @Column({ nullable: true })
+  paidByUserId: string; 
 }

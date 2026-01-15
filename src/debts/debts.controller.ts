@@ -38,7 +38,7 @@ export class DebtsController {
   }
 
   @Get()
-  @UseInterceptors(CacheInterceptor)
+  // @UseInterceptors(CacheInterceptor)
   findAll(
     @Query('page') page: number = 1,
     @Query('size') size: number = 10,
@@ -75,8 +75,8 @@ export class DebtsController {
   }
 
   @Patch(':id/pay')
-  async markAsPaid(@Param('id') id: string, @Request() req) {
-    const result = await this.debtsService.markAsPaid(id, req.user.sub);
+  async markAsPaid(@Param('id') id: string, @Body('userId') userId: string) {
+    const result = await this.debtsService.markAsPaid(id, userId);
     await this.cacheManager.del('/debts');
     return result;
   }

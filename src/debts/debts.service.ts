@@ -27,7 +27,7 @@ export class DebtsService {
     console.log(
       'Registro 24 creado con ID:',
       Array.isArray(saved) ? (saved[0] as Debt)?.id : (saved as Debt).id,
-    ); // Debug para confirmar creación
+    ); 
     return saved;
   }
 
@@ -65,17 +65,14 @@ export class DebtsService {
 
     if (filters?.dateFrom && filters?.dateTo) {
       const start = new Date(filters.dateFrom);
-      start.setHours(0, 0, 0, 0);
-
+      start.setUTCHours(0, 0, 0, 0);
+    
       const end = new Date(filters.dateTo);
-      end.setHours(23, 59, 59, 999);
-
+      end.setUTCHours(23, 59, 59, 999);
+    
       where.createdAt = Between(start, end);
     }
 
-    // DEBUG: Conteo total real sin filtros ni paginación
-    const totalRealEnTabla = await this.debtRepository.count();
-    console.log('CONTEO BRUTO EN DB:', totalRealEnTabla);
 
     const [items, totalItems] = await this.debtRepository.findAndCount({
       where,
@@ -83,13 +80,13 @@ export class DebtsService {
       take: Number(size),
       skip: (Number(page) - 1) * Number(size),
       relations: ['user', 'paidByUser'],
-      loadEagerRelations: false, // Evita que relaciones pesadas bloqueen la consulta
+      loadEagerRelations: false,
     });
 
     return {
       items,
       pagination: {
-        totalItems, // Este es el que debe decir 25
+        totalItems, 
         pageSize: Number(size),
         currentPage: Number(page),
         totalPages: Math.ceil(totalItems / Number(size)),
@@ -129,11 +126,11 @@ export class DebtsService {
 
   async markAsPaid(id: string, paidByUserId: string) {
     const debt = await this.findOne(id);
-    return await this.debtRepository.save({
-      ...debt,
-      isPaid: true,
-      paidByUserId: paidByUserId,
-    });
+
+    debt.isPaid = true;
+    debt.paidByUserId = paidByUserId;
+
+    return await this.debtRepository.save(debt);
   }
   async getStats() {
     const stats = await this.debtRepository

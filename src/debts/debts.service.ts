@@ -16,29 +16,33 @@ export class DebtsService {
     private readonly debtRepository: Repository<Debt>,
   ) {}
 
-  async create(createDebtDto: CreateDebtDto, userId: number) {
+  async create(createDebtDto: any) {
+    const { id, userId, ...debtData } = createDebtDto;
     const newDebt = this.debtRepository.create({
-      ...createDebtDto,
-      user: { id: userId } as any,
+      ...debtData,
+      createdAt: new Date(), // Forzamos la fecha del servidor
+      user: { userId: userId },
     });
-    return await this.debtRepository.save(newDebt);
+    const saved = (await this.debtRepository.save(newDebt)) as Debt | Debt[];
+    console.log(
+      'Registro 24 creado con ID:',
+      Array.isArray(saved) ? (saved[0] as Debt)?.id : (saved as Debt).id,
+    ); // Debug para confirmar creación
+    return saved;
   }
 
   async findAll(page: number, size: number, filters?: any) {
     const where: any = {};
 
-    // 1. Filtro por Estado (Solo si existe y no es string vacío)
     if (filters?.isPaid !== undefined && filters?.isPaid !== '') {
       where.isPaid = filters.isPaid === 'true';
     }
 
-    // 2. Filtro por Descripción (Unificado: usa 'query' o 'description')
     const searchTerms = filters?.query || filters?.description;
     if (searchTerms) {
       where.description = ILike(`%${searchTerms}%`);
     }
 
-    // 3. Filtro de rango para Monto
     if (
       filters?.amountMin !== undefined &&
       filters?.amountMax !== undefined &&
@@ -51,17 +55,14 @@ export class DebtsService {
       );
     }
 
-    // 4. Filtro por Dueño
     if (filters?.userId) {
       where.user = { userId: filters.userId };
     }
 
-    // 5. Filtro por quién pagó
     if (filters?.paidByUserId) {
       where.paidByUserId = filters.paidByUserId;
     }
 
-    // 6. Filtro por rango de fechas
     if (filters?.dateFrom && filters?.dateTo) {
       const start = new Date(filters.dateFrom);
       start.setHours(0, 0, 0, 0);
@@ -72,27 +73,64 @@ export class DebtsService {
       where.createdAt = Between(start, end);
     }
 
+    // DEBUG: Conteo total real sin filtros ni paginación
+    const totalRealEnTabla = await this.debtRepository.count();
+    console.log('CONTEO BRUTO EN DB:', totalRealEnTabla);
+
     const [items, totalItems] = await this.debtRepository.findAndCount({
       where,
       order: { createdAt: 'DESC' },
-      take: size,
-      skip: (page - 1) * size,
+      take: Number(size),
+      skip: (Number(page) - 1) * Number(size),
       relations: ['user', 'paidByUser'],
+      loadEagerRelations: false, // Evita que relaciones pesadas bloqueen la consulta
     });
 
     return {
       items,
       pagination: {
-        totalItems,
-        pageSize: size,
-        currentPage: page,
-        totalPages: Math.ceil(totalItems / size),
+        totalItems, // Este es el que debe decir 25
+        pageSize: Number(size),
+        currentPage: Number(page),
+        totalPages: Math.ceil(totalItems / Number(size)),
       },
     };
   }
+  async findOne(id: string) {
+    const debt = await this.debtRepository.findOne({
+      where: { id },
+      relations: ['user', 'paidByUser'],
+    });
+    if (!debt) throw new NotFoundException('Deuda no encontrada');
+    return debt;
+  }
+  async update(id: string, updateDebtDto: UpdateDebtDto) {
+    const debt = await this.findOne(id);
+
+    if (debt.isPaid) {
+      throw new BadRequestException('No puedes modificar una deuda ya pagada');
+    }
+
+    if (updateDebtDto.amount !== undefined && updateDebtDto.amount < 0) {
+      throw new BadRequestException('El monto no puede ser negativo');
+    }
+
+    Object.assign(debt, updateDebtDto);
+    return await this.debtRepository.save(debt);
+  }
+
+  async remove(id: string) {
+    const debt = await this.findOne(id);
+    if (debt.isPaid) {
+      throw new BadRequestException('No puedes eliminar una deuda ya pagada');
+    }
+    return await this.debtRepository.remove(debt);
+  }
 
   async markAsPaid(id: string, paidByUserId: string) {
-    return this.debtRepository.update(id, {
+    const debt = await this.findOne(id);
+    return await this.debtRepository.save({
+      ...debt,
       isPaid: true,
       paidByUserId: paidByUserId,
     });
@@ -108,26 +146,11 @@ export class DebtsService {
         'SUM(CASE WHEN debt.isPaid = true THEN CAST(debt.amount AS DECIMAL) ELSE 0 END)',
         'totalPaid',
       )
-      .getRawOne(); // Quitamos el .where()
+      .getRawOne();
 
     return {
       pendingBalance: parseFloat(stats.pendingBalance || 0),
       totalPaid: parseFloat(stats.totalPaid || 0),
     };
-  }
-
-  async update(id: string, updateDebtDto: UpdateDebtDto) {
-    const debt = await this.debtRepository.findOneBy({ id });
-
-    if (!debt) throw new NotFoundException('Deuda no encontrada');
-
-    if (debt.isPaid) {
-      throw new BadRequestException(
-        'No puedes modificar una deuda que ya ha sido pagada',
-      );
-    }
-
-    Object.assign(debt, updateDebtDto);
-    return await this.debtRepository.save(debt);
   }
 }

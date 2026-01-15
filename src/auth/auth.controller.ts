@@ -6,15 +6,27 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login')
-  async login(@Body() body: { username: string; password: string }) {
+  async login(@Body() body: { email: string; password: string }) {
     const user = await this.authService.validateUser(
-      body.username,
+      body.email,
       body.password,
     );
+
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    return this.authService.login(user);
+
+    const loginResponse = await this.authService.login(user);
+
+    return {
+      ...loginResponse,
+      user: {
+        userId: user.userId,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+    };
   }
 
   @Post('register')

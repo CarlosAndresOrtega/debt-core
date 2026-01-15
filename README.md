@@ -1,6 +1,6 @@
-# 🧠 BookScraper API – NestJS + PostgreSQL
+# ⚙️ Debt Management System - Backend API (NestJS)
 
-Una API desarrollada con **NestJS + TypeORM** que permite hacer scraping de libros, almacenarlos en una base de datos PostgreSQL, y acceder a ellos mediante filtros. Forma parte de la prueba técnica para **Double V Partners**.
+Este es el servidor API robusto encargado de la lógica de negocio, persistencia de datos y generación de estadísticas para el sistema de gestión de deudas.
 
 ---
 
@@ -8,42 +8,73 @@ Una API desarrollada con **NestJS + TypeORM** que permite hacer scraping de libr
 
 - [🎯 Descripción General](#-descripción-general)
 - [🏗️ Estructura del Proyecto](#%EF%B8%8F-estructura-del-proyecto)
+- [📘 Descripción Técnica](#-descripción-técnica)
+- [📦 Infraestructura (Docker)](#-infraestructura-docker)
 - [🚀 Inicio Rápido](#-inicio-rápido)
-- [🌍 Variables de Entorno](#-variables-de-entorno)
+- [📖 Documentación de la API (Swagger)](#-documentación-de-la-api-swagger)
+- [🌍 Variables de Envío](#-variables-de-entorno)
 - [🧪 Endpoints Principales](#-endpoints-principales)
-- [🗃️ Base de Datos](#-base-de-datos)
 - [🎨 Tecnologías Usadas](#-tecnologías-usadas)
-- [📦 Scripts Útiles](#-scripts-útiles)
-- [🙋‍♂️ Autor](#-autor)
 
 ---
 
 ## 🎯 Descripción General
 
-Este backend incluye funcionalidades como:
-
-- 🔐 Registro y login con JWT
-- 🔎 Scraping de libros (título, precio, rating, stock, etc.)
-- 📄 Almacenamiento en PostgreSQL con TypeORM
-- 🧾 Filtros por categoría, rating, stock, etc.
-- 🛡️ Protecciones básicas de seguridad (autenticación, DTOs, validaciones)
+El backend gestiona el ciclo de vida de las deudas, incluyendo:
+- 🔐 Autenticación y Autorización basada en **JWT**.
+- 📊 Dashboard de estadísticas con cálculos agregados (Total, Pagado, Pendiente).
+- 🧾 Gestión de deudas (CRUD) con filtros avanzados y paginación.
+- 💸 Lógica para marcar deudas como pagadas vinculando al usuario responsable.
+- 🚀 Caché con **Redis** para optimizar el rendimiento.
+- 📝 Documentación interactiva con **Swagger**.
 
 ---
 
 ## 🏗️ Estructura del Proyecto
 
+```text
+debt-management-api/
+├── src/
+│   ├── auth/                # Registro, Login y Guardianes JWT
+│   ├── debts/               # Lógica de deudas, reportes y estadísticas
+│   ├── users/               # Gestión de perfiles de usuario
+│   ├── common/              # Utilidades, filtros y decoradores
+│   ├── app.module.ts        # Módulo raíz
+│   └── main.ts              # Punto de entrada
+├── docker-compose.yml       # Orquestación de DB y Redis
+├── .env.example             # Plantilla de configuración
+└── package.json             # Dependencias
+
 ```
-book-scraper-api/
-├── src/                                     # Código fuente de la aplicación
-│   ├── auth/                                # Módulo de autenticación (login, register)
-│   ├── books/                               # Lógica de scraping y libros
-│   ├── users/                               # Módulo de usuarios
-│   ├── app.module.ts                        # Módulo raíz de NestJS
-│   └── main.ts                              # Archivo principal de arranque
-├── schema.sql                               # Estructura de la base de datos (dump en SQL)
-├── postgress-books.postman_collection.json  # Colección de Postman para probar los endpoints
-├── package.json                             # Dependencias y scripts de Node.js
-└── README.md                                # Documentación del proyecto
+
+---
+
+## 📘 Descripción Técnica
+
+Esta API ha sido diseñada siguiendo los principios de **Arquitectura Modular** de NestJS, garantizando escalabilidad y mantenibilidad.
+
+### Características del Sistema:
+
+* **Gestión de Datos Relacional**: Utiliza **PostgreSQL** para asegurar la integridad de las transacciones financieras y las relaciones entre deudores y pagadores.
+* **Optimización de Consultas**: Implementa un sistema de **Caché con Redis** para los endpoints de lectura frecuente (como el listado de deudas y estadísticas), reduciendo la latencia y la carga en la base de datos principal.
+* **Cálculos Agregados**: La lógica de estadísticas realiza cálculos directamente en el motor de la base de datos mediante **TypeORM QueryBuilder**, permitiendo procesar grandes volúmenes de registros de forma instantánea.
+* **Seguridad y Auditoría**: El sistema de autenticación emplea **Passport.js y JWT**, asegurando que cada operación de pago o edición quede vinculada a un usuario autenticado mediante el registro de IDs de auditoría.
+* **Exportación de Reportes**: Cuenta con un motor de generación de **CSV** que permite a los usuarios administrativos obtener estados de cuenta filtrados para análisis externo.
+
+---
+
+## 📦 Infraestructura (Docker)
+
+El proyecto requiere **PostgreSQL** y **Redis**. Se incluye un archivo `docker-compose.yml` para levantar estos servicios de forma automática.
+
+**Servicios configurados:**
+
+* **PostgreSQL**: Base de datos relacional (Puerto 5432).
+* **Redis**: Motor de caché (Puerto 6379).
+
+```bash
+# Levantar la infraestructura
+docker-compose up -d
 
 ```
 
@@ -51,145 +82,104 @@ book-scraper-api/
 
 ## 🚀 Inicio Rápido
 
-### 📋 Requisitos Previos
-
-- Node.js 18+
-- Docker y Docker Compose
-- PostgreSQL (puedes usar Docker)
-
 ### ⚡ Instalación
 
 ```bash
-# 1️⃣ Clonar el repositorio
-git clone https://github.com/CarlosAndresOrtega/BackendLibros.git
-cd BackendLibros
-
-# 2️⃣ Instalar dependencias
+# 1. Clonar e instalar
+git clone [https://github.com/CarlosAndresOrtega/debt-core.git](https://github.com/CarlosAndresOrtega/debt-core.git)
+cd debt-core
 npm install
 
-# 3️⃣ Crear base de datos y cargar estructura
-docker run --name postgres-books -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres
-createdb -U postgres booksdb
-psql -U postgres -d booksdb -f schema.sql
-```
+# 2. Configurar Base de Datos (Docker)
+docker-compose up -d
 
-### ▶️ Levantar la API
-
-```bash
+# 3. Iniciar API
 npm run start:dev
+
 ```
 
-La API estará disponible en: [http://localhost:3000](http://localhost:3000)
+La API estará disponible en: `http://localhost:3000/api`
+
+---
+
+## 📖 Documentación de la API (Swagger)
+
+El proyecto tiene implementado **Swagger**, lo que permite visualizar y probar todos los endpoints desde una interfaz web interactiva.
+
+Una vez que la aplicación esté corriendo, puedes acceder a la documentación en:
+👉 **[http://localhost:3000/api/docs](https://www.google.com/search?q=http://localhost:3000/api/docs)**
 
 ---
 
 ## 🌍 Variables de Entorno
 
-Crea un archivo `.env` en la raíz con el siguiente contenido (si usas configuración dinámica):
+Crea un archivo `.env` en la raíz basado en los valores del `docker-compose.yml`:
 
 ```env
+PORT=3000
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=postgres
-DB_PASS=postgres
-DB_NAME=booksdb
-JWT_SECRET=supersecret
-```
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_DATABASE=debtdb
+REDIS_HOST=localhost
+REDIS_PORT=6379
+JWT_SECRET=tu_clave_secreta
 
-> Alternativamente, la conexión puede estar en `TypeOrmModule.forRoot()` en código.
+```
 
 ---
 
 ## 🧪 Endpoints Principales
 
-### 🔐 Auth
+### 🔐 Auth & Users
 
-| Método | Endpoint       | Descripción             | Protegido |
-| ------ | -------------- | ----------------------- | --------- |
-| POST   | /auth/register | Registrar usuario nuevo | ❌        |
-| POST   | /auth/login    | Login y retorno de JWT  | ❌        |
+| Método | Endpoint | Descripción |
+| --- | --- | --- |
+| POST | `/auth/login` | Autenticación y retorno de token |
+| POST | `/auth/register` | Creación de cuenta nueva |
 
-### 📚 Books
+### 💰 Deudas (Debts)
 
-| Método | Endpoint                                      | Descripción                                                 | Protegido |
-| ------ | --------------------------------------------- | ----------------------------------------------------------- | --------- |
-| GET    | /books                                        | Obtener todos los libros (paginación, filtros, orden)       | ✅        |
-| GET    | /books/:id                                    | Obtener un libro por ID                                     | ✅        |
-| DELETE | /books/:id                                    | Eliminar un libro por ID                                    | ✅        |
-| GET    | /books?category=Music                         | Filtrar libros por rating                                   | ✅        |
-| GET    | /books?category=Musi&priceMin=10&priceMax=100 | Filtrar por categoría y precio                              | ✅        |
-| GET    | /books/filters                                | Obtener filtros disponibles (categorías y rangos de precio) | ✅        |
-| GET    | /books/scrape-books?page=1&totalPages=2       | Scrapear libros con paginación                              | ✅        |
-| GET    | /books/scrape-books                           | Scrapear libros (versión alternativa, sin paginación)       | ✅        |
-
-### 👤 Users
-
-| Método | Endpoint   | Descripción               | Protegido |
-| ------ | ---------- | ------------------------- | --------- |
-| POST   | /users     | Crear nuevo usuario       | ❌        |
-| GET    | /users     | Listar todos los usuarios | ❌        |
-| GET    | /users/:id | Obtener usuario por ID    | ❌        |
-
-📬 Postman Collection
-Para facilitar las pruebas de los endpoints disponibles, se incluye una colección de Postman:
-postgress-books.postman_collection.json
-
-Puedes importarla directamente en Postman para probar el login, registro, scraping y operaciones CRUD sobre libros. Asegúrate de autenticarte primero para acceder a los endpoints protegidos.
-
----
-
-> Las rutas protegidas requieren el header `Authorization: Bearer <token>`
-
----
-
-## 🗃️ Base de Datos
-
-- Motor: PostgreSQL
-- ORM: TypeORM
-- Estructura disponible en el archivo `schema.sql`
-
-```bash
-# Importar estructura manualmente:
-psql -U postgres -d booksdb -f schema.sql
-```
-
-También puedes configurar migraciones con TypeORM si deseas mayor control.
+| Método | Endpoint | Descripción |
+| --- | --- | --- |
+| GET | `/debts` | Lista paginada con filtros |
+| GET | `/debts/stats` | Totales (Pagado vs Pendiente) |
+| PATCH | `/debts/:id/pay` | Marcar como pagada (requiere userId) |
+| GET | `/debts/export/csv` | Descarga de reporte en Excel/CSV |
 
 ---
 
 ## 🎨 Tecnologías Usadas
 
-| Tecnología | Versión | Descripción                       |
-| ---------- | ------- | --------------------------------- |
-| NestJS     | ^10.x   | Framework backend                 |
-| TypeORM    | ^0.3.x  | ORM para PostgreSQL               |
-| PostgreSQL | 17.5    | Motor de base de datos relacional |
-| JWT        | ^9.x    | Autenticación basada en tokens    |
-| Docker     | latest  | Contenedor para base de datos     |
-| pg_dump    | 17.5    | Exportador de esquema `.sql`      |
+| Tecnología | Descripción |
+| --- | --- |
+| **NestJS** | Framework de backend eficiente y escalable. |
+| **Swagger** | Documentación interactiva de la API. |
+| **TypeORM** | ORM para interactuar con PostgreSQL. |
+| **PostgreSQL** | Motor de base de datos relacional. |
+| **Redis** | Gestión de caché de alto rendimiento. |
+| **Passport/JWT** | Estrategias de seguridad y tokens. |
 
 ---
 
 ## 📦 Scripts Útiles
 
 ```bash
-npm run start:dev      # Ejecuta con hot-reload (desarrollo)
-npm run build          # Compila el proyecto a dist/
-npm run test           # Ejecuta pruebas unitarias (si existen)
+npm run start:dev   # Desarrollo con recarga rápida
+npm run build       # Compilar para producción
+docker-compose down # Apagar base de datos y caché
+
 ```
 
 ---
 
-## 🙋‍♂️ Autor
-
-**Carlos Andres Ortega Yate**  
-📧 caortegayate@gmail.com  
-🔗 GitHub: [github.com/tuusuario](https://github.com/CarlosAndresOrtega)
-
----
-
 <div align="center">
-
-_💡 Desarrollado con NestJS + PostgreSQL para Double V Partners_
-
+<i>Desarrollado para la gestión financiera eficiente</i>
 </div>
+
+```
+
+**¿Deseas que añada alguna otra especificación sobre el manejo de errores o la validación de DTOs en la descripción técnica?**
+
+```

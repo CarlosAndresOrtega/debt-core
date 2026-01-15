@@ -1,6 +1,3 @@
-Aquí tienes el **README.md** actualizado y organizado, incluyendo la sección de **Documentación con Swagger** para que cualquier desarrollador pueda probar los endpoints fácilmente.
-
-```markdown
 # ⚙️ Debt Management System - Backend API (NestJS)
 
 Este es el servidor API robusto encargado de la lógica de negocio, persistencia de datos y generación de estadísticas para el sistema de gestión de deudas.
@@ -11,10 +8,11 @@ Este es el servidor API robusto encargado de la lógica de negocio, persistencia
 
 - [🎯 Descripción General](#-descripción-general)
 - [🏗️ Estructura del Proyecto](#%EF%B8%8F-estructura-del-proyecto)
+- [📘 Descripción Técnica](#-descripción-técnica)
 - [📦 Infraestructura (Docker)](#-infraestructura-docker)
 - [🚀 Inicio Rápido](#-inicio-rápido)
 - [📖 Documentación de la API (Swagger)](#-documentación-de-la-api-swagger)
-- [🌍 Variables de Entorno](#-variables-de-entorno)
+- [🌍 Variables de Envío](#-variables-de-entorno)
 - [🧪 Endpoints Principales](#-endpoints-principales)
 - [🎨 Tecnologías Usadas](#-tecnologías-usadas)
 
@@ -29,6 +27,39 @@ El backend gestiona el ciclo de vida de las deudas, incluyendo:
 - 💸 Lógica para marcar deudas como pagadas vinculando al usuario responsable.
 - 🚀 Caché con **Redis** para optimizar el rendimiento.
 - 📝 Documentación interactiva con **Swagger**.
+
+---
+
+## 🏗️ Estructura del Proyecto
+
+```text
+debt-management-api/
+├── src/
+│   ├── auth/                # Registro, Login y Guardianes JWT
+│   ├── debts/               # Lógica de deudas, reportes y estadísticas
+│   ├── users/               # Gestión de perfiles de usuario
+│   ├── common/              # Utilidades, filtros y decoradores
+│   ├── app.module.ts        # Módulo raíz
+│   └── main.ts              # Punto de entrada
+├── docker-compose.yml       # Orquestación de DB y Redis
+├── .env.example             # Plantilla de configuración
+└── package.json             # Dependencias
+
+```
+
+---
+
+## 📘 Descripción Técnica
+
+Esta API ha sido diseñada siguiendo los principios de **Arquitectura Modular** de NestJS, garantizando escalabilidad y mantenibilidad.
+
+### Características del Sistema:
+
+* **Gestión de Datos Relacional**: Utiliza **PostgreSQL** para asegurar la integridad de las transacciones financieras y las relaciones entre deudores y pagadores.
+* **Optimización de Consultas**: Implementa un sistema de **Caché con Redis** para los endpoints de lectura frecuente (como el listado de deudas y estadísticas), reduciendo la latencia y la carga en la base de datos principal.
+* **Cálculos Agregados**: La lógica de estadísticas realiza cálculos directamente en el motor de la base de datos mediante **TypeORM QueryBuilder**, permitiendo procesar grandes volúmenes de registros de forma instantánea.
+* **Seguridad y Auditoría**: El sistema de autenticación emplea **Passport.js y JWT**, asegurando que cada operación de pago o edición quede vinculada a un usuario autenticado mediante el registro de IDs de auditoría.
+* **Exportación de Reportes**: Cuenta con un motor de generación de **CSV** que permite a los usuarios administrativos obtener estados de cuenta filtrados para análisis externo.
 
 ---
 
@@ -76,13 +107,7 @@ La API estará disponible en: `http://localhost:3000/api`
 El proyecto tiene implementado **Swagger**, lo que permite visualizar y probar todos los endpoints desde una interfaz web interactiva.
 
 Una vez que la aplicación esté corriendo, puedes acceder a la documentación en:
-👉 **[http://localhost:3000/api/docs](https://www.google.com/search?q=http://localhost:3000/api/docs)** (o la ruta configurada en tu `main.ts`).
-
-En esta interfaz podrás:
-
-* Ver los esquemas de datos (DTOs).
-* Probar el Login y Registro.
-* Ejecutar peticiones autenticadas usando el botón `Authorize` con el token JWT.
+👉 **[http://localhost:3000/api/docs](https://www.google.com/search?q=http://localhost:3000/api/docs)**
 
 ---
 
@@ -146,5 +171,15 @@ npm run build       # Compilar para producción
 docker-compose down # Apagar base de datos y caché
 
 ```
+
+---
+
+<div align="center">
+<i>Desarrollado para la gestión financiera eficiente</i>
+</div>
+
+```
+
+**¿Deseas que añada alguna otra especificación sobre el manejo de errores o la validación de DTOs en la descripción técnica?**
 
 ```

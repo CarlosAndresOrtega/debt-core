@@ -22,7 +22,7 @@ docker-compose up -d
 
 ```bash
 # 1. Clonar e instalar
-git clone <url-del-repositorio>
+git clone https://github.com/CarlosAndresOrtega/debt-core.git
 npm install
 
 # 2. Configurar Base de Datos (Docker)

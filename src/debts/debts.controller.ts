@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   Query,
   Inject,
+  Res,
 } from '@nestjs/common';
 import { DebtsService } from './debts.service';
 import { CreateDebtDto } from './dto/create-debt.dto';
@@ -38,7 +39,6 @@ export class DebtsController {
   }
 
   @Get()
-  // @UseInterceptors(CacheInterceptor)
   findAll(
     @Query('page') page: number = 1,
     @Query('size') size: number = 10,
@@ -81,13 +81,12 @@ export class DebtsController {
     return result;
   }
 
-  @Get('export/json')
-  async exportJson() {
-    const result = await this.debtsService.findAll(1, 10000);
-    return {
-      reportDate: new Date().toISOString(),
-      totalRecords: result.pagination.totalItems,
-      data: result.items,
-    };
+  @Get('export/csv')
+  async exportCsv(@Query() filters: any, @Res() res) {
+    const csvData = await this.debtsService.exportToCsv(filters);
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=deudas.csv');
+    return res.send(csvData);
   }
 }

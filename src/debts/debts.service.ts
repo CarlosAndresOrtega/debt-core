@@ -20,7 +20,7 @@ export class DebtsService {
     const { id, userId, ...debtData } = createDebtDto;
     const newDebt = this.debtRepository.create({
       ...debtData,
-      createdAt: new Date(), // Forzamos la fecha del servidor
+      createdAt: new Date(),
       user: { userId: userId },
     });
     const saved = (await this.debtRepository.save(newDebt)) as Debt | Debt[];
@@ -150,4 +150,21 @@ export class DebtsService {
       totalPaid: parseFloat(stats.totalPaid || 0),
     };
   }
+
+  async exportToCsv(filters: any): Promise<string> {
+    const { items } = await this.findAll(1, 10000, filters);
+
+    const headers = ['Descripción', 'Monto', 'Estado', 'Usuario', 'Pagado Por', 'Fecha Registro'];
+    
+    const rows = items.map(debt => [
+        `"${debt.description}"`,
+        debt.amount,
+        debt.isPaid ? 'Pagada' : 'Pendiente',
+        `"${debt.user?.firstName} ${debt.user?.lastName}"`,
+        debt.paidByUser ? `"${debt.paidByUser?.firstName} ${debt.paidByUser?.lastName}"` : 'N/A',
+        new Date(debt.createdAt).toISOString()
+    ]);
+
+    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+}
 }

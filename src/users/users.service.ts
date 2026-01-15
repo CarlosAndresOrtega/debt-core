@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UsersService {
@@ -11,11 +12,14 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async create(email: string, password: string): Promise<User> {
+  async create(email: string, password: string, firstName: string, lastName: string): Promise<User> {
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = this.usersRepository.create({
       email,
       password: hashedPassword,
+      firstName,
+      lastName
     });
     return this.usersRepository.save(user);
   }
@@ -24,9 +28,9 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
-  async findOne(id: number): Promise<User> {
-    const user = await this.usersRepository.findOne({ where: { id } });
-    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+  async findOne(userId: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { userId } });
+    if (!user) throw new NotFoundException(`User with ID ${userId} not found`);
     return user;
   }
 
@@ -34,7 +38,7 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
-  async update(id: number, email: string, password?: string): Promise<User> {
+  async update(id: string, email: string, password?: string): Promise<User> {
     const user = await this.findOne(id);
     user.email = email;
     if (password) {
@@ -43,7 +47,7 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     const user = await this.findOne(id);
     await this.usersRepository.remove(user);
   }
@@ -53,3 +57,4 @@ export class UsersService {
     return user ?? undefined;
   }
 }
+

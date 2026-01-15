@@ -30,7 +30,6 @@ export class AuthService {
     const exists = await this.usersService.findByEmail(userData.email);
     if (exists) throw new BadRequestException('El usuario ya existe');
     
-    console.log('Registering user with data:', userData);
     const user = await this.usersService.create(userData.email, userData.password, userData.firstName, userData.lastName);
     
     return this.login(user);

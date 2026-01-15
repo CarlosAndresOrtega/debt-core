@@ -49,9 +49,12 @@ export class DebtsController {
   }
 
   @Get('stats')
-  @UseInterceptors(CacheInterceptor)
-  getStats() {
-    return this.debtsService.getStats();
+  async getStats() {
+    const stats = await this.debtsService.calculateStats();
+    return {
+      ...stats,
+      totalAmount: stats.totalPaid + stats.pendingBalance,
+    };
   }
 
   @Get(':id')

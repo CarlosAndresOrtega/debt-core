@@ -86,7 +86,7 @@ docker-compose up -d
 
 ```bash
 # 1. Clonar e instalar
-git clone [https://github.com/CarlosAndresOrtega/debt-core.git](https://github.com/CarlosAndresOrtega/debt-core.git)
+git clone (https://github.com/CarlosAndresOrtega/debt-core.git)
 cd debt-core
 npm install
 
@@ -173,13 +173,3 @@ docker-compose down # Apagar base de datos y caché
 ```
 
 ---
-
-<div align="center">
-<i>Desarrollado para la gestión financiera eficiente</i>
-</div>
-
-```
-
-**¿Deseas que añada alguna otra especificación sobre el manejo de errores o la validación de DTOs en la descripción técnica?**
-
-```
